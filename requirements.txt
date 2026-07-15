@@ -12,3 +12,4 @@ pandas>=2.2
 numpy>=2.0
 joblib>=1.4
 python-multipart>=0.0.18
+gradio>=4.0.0
