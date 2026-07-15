@@ -190,6 +190,39 @@ def health():
     }
 
 
+# ─── Gradio Mount (for Hugging Face Space visibility) ───────────────────────
+try:
+    import gradio as gr
+    
+    # Simple, nice-looking dashboard indicating that the FDS core engine is alive
+    with gr.Blocks(title="SAFER FDS Engine", css="footer {visibility: hidden}") as demo:
+        gr.Markdown("# 🛡️ SAFER FDS — AI Fraud Intelligence Core Engine")
+        gr.Markdown("### Status: **🟢 Running B2B Sandbox Mode**")
+        gr.Markdown(
+            "Ini adalah backend API Core Engine untuk SAFER yang melayani skoring transaksi B2B secara real-time. "
+            "Portal antarmuka analis utama (Dashboard & Fraud Graph) dideploy secara terpisah di "
+            "**[safer-fds.pages.dev](https://safer-fds.pages.dev)**."
+        )
+        
+        with gr.Accordion("Dokumentasi Integrasi API", open=True):
+            gr.Markdown("Hubungkan sistem core banking atau PJP fintech Anda ke endpoint berikut:")
+            gr.Markdown("- **Interactive Swagger UI**: [Buka /docs](/docs)")
+            gr.Markdown("- **Health Status Check**: [Buka /health](/health)")
+            gr.Markdown("- **Batch Generation Sandbox**: `POST /api/transactions/batch`")
+            gr.Markdown("- **Single Scoring Engine**: `POST /api/transactions/simulate`")
+            
+        with gr.Accordion("Metrik AI Engine v2", open=False):
+            gr.Markdown("- **Model Architecture**: Ensemble XGBoost + LightGBM v2")
+            gr.Markdown("- **Dataset Latih**: 100,000 Transaksi Tabular Indonesia")
+            gr.Markdown("- **Akurasi**: 99.89% (FPR: 0.02% / Recall: 99.05%)")
+            gr.Markdown("- **Pola Fraud**: Mule Ring, Device Farm, Judi Online, Structuring/Smurfing, dll.")
+
+    app = gr.mount_gradio_app(app, demo, path="/")
+    print("[Gateway] Mounted Gradio UI successfully on root path /")
+except Exception as e:
+    print(f"[Gateway] Failed to mount Gradio UI: {e}")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=GATEWAY_PORT, reload=True)
