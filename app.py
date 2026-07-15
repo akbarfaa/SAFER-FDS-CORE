@@ -4,6 +4,26 @@ import subprocess
 import time
 import signal
 
+# Monkey patch huggingface_hub to prevent HfFolder import error in spaces/gradio
+try:
+    import huggingface_hub
+    if not hasattr(huggingface_hub, "HfFolder"):
+        class DummyHfFolder:
+            @classmethod
+            def get_token(cls):
+                return os.getenv("HF_TOKEN", "")
+            @classmethod
+            def save_token(cls, token):
+                pass
+            @classmethod
+            def delete_token(cls):
+                pass
+        huggingface_hub.HfFolder = DummyHfFolder
+        sys.modules["huggingface_hub"].HfFolder = DummyHfFolder
+        print("[Launcher] Monkey-patched HfFolder in huggingface_hub successfully!")
+except Exception as e:
+    print(f"[Launcher] Failed to monkey-patch huggingface_hub: {e}")
+
 # Decoy function to satisfy Hugging Face ZeroGPU platform requirement
 try:
     import spaces
