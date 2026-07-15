@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "trained_at": "2026-07-15T18:55:48.844744",
+  "dataset": {
+    "train_path": "d:\\SAFER\\MODEL AI\\train_transactions.csv",
+    "test_path": "d:\\SAFER\\MODEL AI\\test_transactions.csv"
+  },
+  "features": [
+    "sender_bank",
+    "sender_lat",
+    "sender_lng",
+    "receiver_bank",
+    "receiver_lat",
+    "receiver_lng",
+    "amount",
+    "payment_rail",
+    "ewallet_provider",
+    "merchant",
+    "merchant_category",
+    "channel",
+    "device_type",
+    "device_brand",
+    "is_new_device",
+    "account_age_days",
+    "is_velocity_anomaly",
+    "is_geo_mismatch",
+    "is_off_hours",
+    "is_high_value_for_rail",
+    "is_suspicious_ip",
+    "is_risky_merchant",
+    "is_new_account",
+    "has_failed_attempts",
+    "is_device_mismatch",
+    "is_sim_swap",
+    "is_unusual_beneficiary",
+    "velocity_count",
+    "geo_distance_km"
+  ],
+  "metrics": {
+    "XGBoost": {
+      "accuracy": 0.99905,
+      "precision": 0.9984901862103673,
+      "recall": 0.992,
+      "f1_score": 0.9952345121645347,
+      "roc_auc": 0.9999229444444445,
+      "pr_auc": 0.9995002080367161
+    },
+    "LightGBM": {
+      "accuracy": 0.9989,
+      "precision": 0.9984879032258065,
+      "recall": 0.9905,
+      "f1_score": 0.9944779116465864,
+      "roc_auc": 0.9999235,
+      "pr_auc": 0.9995233885498968
+    },
+    "Ensemble": {
+      "accuracy": 0.9989,
+      "precision": 0.9984879032258065,
+      "recall": 0.9905,
+      "f1_score": 0.9944779116465864,
+      "roc_auc": 0.9999232777777778,
+      "pr_auc": 0.999502984520295
+    }
+  }
+}
