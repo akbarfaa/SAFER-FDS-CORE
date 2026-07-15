@@ -190,37 +190,152 @@ def health():
     }
 
 
-# ─── Gradio Mount (for Hugging Face Space visibility) ───────────────────────
-try:
-    import gradio as gr
-    
-    # Simple, nice-looking dashboard indicating that the FDS core engine is alive
-    with gr.Blocks(title="SAFER FDS Engine", css="footer {visibility: hidden}") as demo:
-        gr.Markdown("# 🛡️ SAFER FDS — AI Fraud Intelligence Core Engine")
-        gr.Markdown("### Status: **🟢 Running B2B Sandbox Mode**")
-        gr.Markdown(
-            "Ini adalah backend API Core Engine untuk SAFER yang melayani skoring transaksi B2B secara real-time. "
-            "Portal antarmuka analis utama (Dashboard & Fraud Graph) dideploy secara terpisah di "
-            "**[safer-fds.pages.dev](https://safer-fds.pages.dev)**."
-        )
-        
-        with gr.Accordion("Dokumentasi Integrasi API", open=True):
-            gr.Markdown("Hubungkan sistem core banking atau PJP fintech Anda ke endpoint berikut:")
-            gr.Markdown("- **Interactive Swagger UI**: [Buka /docs](/docs)")
-            gr.Markdown("- **Health Status Check**: [Buka /health](/health)")
-            gr.Markdown("- **Batch Generation Sandbox**: `POST /api/transactions/batch`")
-            gr.Markdown("- **Single Scoring Engine**: `POST /api/transactions/simulate`")
-            
-        with gr.Accordion("Metrik AI Engine v2", open=False):
-            gr.Markdown("- **Model Architecture**: Ensemble XGBoost + LightGBM v2")
-            gr.Markdown("- **Dataset Latih**: 100,000 Transaksi Tabular Indonesia")
-            gr.Markdown("- **Akurasi**: 99.89% (FPR: 0.02% / Recall: 99.05%)")
-            gr.Markdown("- **Pola Fraud**: Mule Ring, Device Farm, Judi Online, Structuring/Smurfing, dll.")
+# ─── HTML Root Route (for Hugging Face Space visibility and healthcheck) ────
+from fastapi.responses import HTMLResponse
 
-    app = gr.mount_gradio_app(app, demo, path="/")
-    print("[Gateway] Mounted Gradio UI successfully on root path /")
-except Exception as e:
-    print(f"[Gateway] Failed to mount Gradio UI: {e}")
+@app.get("/", response_class=HTMLResponse)
+def index():
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <title>SAFER FDS — AI Fraud Intelligence Core Engine</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background-color: #0b0f19;
+                color: #f3f4f6;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            .card {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 20px;
+                padding: 40px;
+                max-width: 550px;
+                width: 90%;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(12px);
+                text-align: center;
+            }
+            h1 {
+                font-size: 32px;
+                font-weight: 800;
+                margin-top: 0;
+                margin-bottom: 8px;
+                background: linear-gradient(135deg, #ef4444 0%, #6366f1 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                letter-spacing: -0.5px;
+            }
+            .status {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(16, 185, 129, 0.08);
+                color: #10b981;
+                padding: 6px 16px;
+                border-radius: 20px;
+                font-weight: 600;
+                font-size: 13px;
+                margin-bottom: 24px;
+                border: 1px solid rgba(16, 185, 129, 0.15);
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                background-color: #10b981;
+                border-radius: 50%;
+                box-shadow: 0 0 10px #10b981;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% { transform: scale(0.9); opacity: 0.6; }
+                50% { transform: scale(1.1); opacity: 1; }
+                100% { transform: scale(0.9); opacity: 0.6; }
+            }
+            p {
+                color: #9ca3af;
+                font-size: 15px;
+                line-height: 1.6;
+                margin-bottom: 32px;
+            }
+            .links {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 12px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 14px;
+                transition: all 0.2s;
+            }
+            .btn-primary {
+                background: #6366f1;
+                color: #ffffff;
+                box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            }
+            .btn-primary:hover {
+                background: #4f46e5;
+                transform: translateY(-1px);
+            }
+            .btn-secondary {
+                background: rgba(255, 255, 255, 0.03);
+                color: #f3f4f6;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .btn-secondary:hover {
+                background: rgba(255, 255, 255, 0.08);
+                transform: translateY(-1px);
+            }
+            .footer {
+                margin-top: 36px;
+                font-size: 12px;
+                color: #4b5563;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                padding-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>🛡️ SAFER FDS</h1>
+            <div class="status">
+                <span class="status-dot"></span>
+                Running B2B Sandbox Mode
+            </div>
+            <p>
+                Ini adalah API Core Engine untuk SAFER yang melayani skoring transaksi B2B secara real-time. 
+                Portal antarmuka analis utama (Dashboard & Fraud Graph) di-deploy secara terpisah di 
+                <a href="https://safer-fds.pages.dev" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 500;">safer-fds.pages.dev</a>.
+            </p>
+            <div class="links">
+                <a href="/docs" class="btn btn-primary">Swagger API Docs</a>
+                <a href="/health" class="btn btn-secondary">Health Status</a>
+            </div>
+            <div class="footer">
+                Model: Ensemble XGBoost + LightGBM v2 | Dataset: 100K Indonesia
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content, status_code=200)
 
 
 if __name__ == "__main__":
