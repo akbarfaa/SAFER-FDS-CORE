@@ -205,7 +205,7 @@ def index():
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                background-color: #0b0f19;
+                background-color: #030712;
                 color: #f3f4f6;
                 margin: 0;
                 padding: 0;
@@ -213,39 +213,55 @@ def index():
                 align-items: center;
                 justify-content: center;
                 min-height: 100vh;
+                background-image: 
+                    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.15) 0, transparent 50%);
             }
             .card {
-                background: rgba(255, 255, 255, 0.02);
+                background: rgba(17, 24, 39, 0.45);
                 border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 20px;
-                padding: 40px;
-                max-width: 550px;
+                border-radius: 24px;
+                padding: 48px 40px;
+                max-width: 580px;
                 width: 90%;
-                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(12px);
+                box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
                 text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+            .card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, #ef4444 0%, #6366f1 100%);
             }
             h1 {
-                font-size: 32px;
+                font-size: 34px;
                 font-weight: 800;
                 margin-top: 0;
-                margin-bottom: 8px;
-                background: linear-gradient(135deg, #ef4444 0%, #6366f1 100%);
+                margin-bottom: 12px;
+                background: linear-gradient(135deg, #f87171 0%, #818cf8 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
-                letter-spacing: -0.5px;
+                letter-spacing: -0.8px;
             }
             .status {
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
                 background: rgba(16, 185, 129, 0.08);
-                color: #10b981;
+                color: #34d399;
                 padding: 6px 16px;
                 border-radius: 20px;
                 font-weight: 600;
                 font-size: 13px;
-                margin-bottom: 24px;
+                margin-bottom: 28px;
                 border: 1px solid rgba(16, 185, 129, 0.15);
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
@@ -253,9 +269,9 @@ def index():
             .status-dot {
                 width: 8px;
                 height: 8px;
-                background-color: #10b981;
+                background-color: #34d399;
                 border-radius: 50%;
-                box-shadow: 0 0 10px #10b981;
+                box-shadow: 0 0 12px #34d399;
                 animation: pulse 2s infinite;
             }
             @keyframes pulse {
@@ -265,50 +281,52 @@ def index():
             }
             p {
                 color: #9ca3af;
-                font-size: 15px;
+                font-size: 16px;
                 line-height: 1.6;
-                margin-bottom: 32px;
+                margin-bottom: 36px;
             }
             .links {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 12px;
+                gap: 16px;
             }
             .btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                padding: 12px;
-                border-radius: 8px;
+                padding: 14px;
+                border-radius: 12px;
                 text-decoration: none;
                 font-weight: 600;
-                font-size: 14px;
-                transition: all 0.2s;
+                font-size: 15px;
+                transition: all 0.2s ease-in-out;
             }
             .btn-primary {
-                background: #6366f1;
+                background: #4f46e5;
                 color: #ffffff;
-                box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+                box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
             }
             .btn-primary:hover {
-                background: #4f46e5;
-                transform: translateY(-1px);
+                background: #4338ca;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 24px rgba(79, 70, 229, 0.45);
             }
             .btn-secondary {
                 background: rgba(255, 255, 255, 0.03);
-                color: #f3f4f6;
+                color: #e5e7eb;
                 border: 1px solid rgba(255, 255, 255, 0.08);
             }
             .btn-secondary:hover {
                 background: rgba(255, 255, 255, 0.08);
-                transform: translateY(-1px);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.15);
             }
             .footer {
-                margin-top: 36px;
+                margin-top: 40px;
                 font-size: 12px;
-                color: #4b5563;
-                border-top: 1px solid rgba(255, 255, 255, 0.05);
-                padding-top: 20px;
+                color: #6b7280;
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
+                padding-top: 24px;
             }
         </style>
     </head>
@@ -322,7 +340,7 @@ def index():
             <p>
                 Ini adalah API Core Engine untuk SAFER yang melayani skoring transaksi B2B secara real-time. 
                 Portal antarmuka analis utama (Dashboard & Fraud Graph) di-deploy secara terpisah di 
-                <a href="https://safer-fds.pages.dev" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 500;">safer-fds.pages.dev</a>.
+                <a href="https://safer.web.id" target="_blank" style="color: #818cf8; text-decoration: none; font-weight: 600; transition: color 0.2s;">safer.web.id</a>.
             </p>
             <div class="links">
                 <a href="/docs" class="btn btn-primary">Swagger API Docs</a>
