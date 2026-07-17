@@ -212,7 +212,7 @@ class SHAPExplainer:
         else:
             action = f"**Rekomendasi Tindakan**: **{recommendation}**. Proses transaksi seperti biasa."
 
-        return f"{opening}\n\n{context}\n\n{analysis}\n\n{action}"
+        return f"{opening}\n\n{context}\n\n{analysis}\n\n{action}".replace("**", "")
 
     def _generate_fallback_reasoning(self, tx: dict, risk_score: int, severity: str, prob: float, recommendation: str) -> str:
         """Simple rule-based fallback reasoning in case SHAP is unavailable."""
@@ -246,4 +246,4 @@ class SHAPExplainer:
 
         context = f"Dana **{amount_fmt}** dikirim oleh **{tx.get('sender_name', 'N/A')}** ke **{tx.get('receiver_name', 'N/A')}** via **{tx.get('payment_rail', 'N/A')}**."
 
-        return f"{opening}\n\n{context}\n\n{analysis}\n\n{action}"
+        return f"{opening}\n\n{context}\n\n{analysis}\n\n{action}".replace("**", "")
