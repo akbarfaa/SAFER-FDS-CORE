@@ -41,6 +41,9 @@ CORS_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    # Production custom domains
+    "https://safer.web.id",
+    "https://api.safer.web.id",
     # Cloudflare Pages production URLs
     "https://safer-fds.pages.dev",
     "https://*.safer-fds.pages.dev",
