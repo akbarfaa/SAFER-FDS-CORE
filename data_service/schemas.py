@@ -147,3 +147,28 @@ class BatchGenerateRequest(BaseModel):
     """Request to generate batch of synthetic transactions."""
     count: int = Field(default=5, ge=1, le=100)
     fraud_ratio: float = Field(default=0.18, ge=0.0, le=1.0)
+
+
+# ─── Lead Registration & API Keys ─────────────────────────────────────────
+
+class LeadCreate(BaseModel):
+    name: str
+    email: str
+    company: str
+    position: str
+    interest_model: str
+
+
+class LeadResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    company: str
+    position: str
+    interest_model: str
+    client_id: str
+    client_secret: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -93,8 +93,41 @@ async def proxy_request(service_url: str, path: str, request: Request) -> Respon
 # 1. Simulator: score manual input without saving to database
 @app.post("/api/transactions/simulate")
 async def simulate_transaction(request: Request):
-    """Proxies directly to ML Scoring Service to score manual inputs without saving."""
+    """
+    Proxies directly to ML Scoring Service to score manual inputs without saving.
+    Supports Optional B2B Authentication via X-Client-ID & X-Client-Secret headers.
+    """
+    client_id = request.headers.get("x-client-id")
+    client_secret = request.headers.get("x-client-secret")
+    
+    if client_id or client_secret:
+        # Validate credentials against Data Service
+        try:
+            val_resp = await client.post(
+                f"{DATA_SERVICE_URL}/leads/validate",
+                json={"client_id": client_id, "client_secret": client_secret},
+                timeout=5.0
+            )
+            if val_resp.status_code != 200:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Kredensial API Sandbox salah atau tidak terdaftar. Silakan registrasi terlebih dahulu."
+                )
+        except httpx.HTTPError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Database validasi kredensial sedang tidak dapat dihubungi. Error: {exc}"
+            )
+            
     return await proxy_request(SCORING_SERVICE_URL, "/score", request)
+
+
+# Leads Registration proxy routes
+@app.post("/api/leads")
+@app.get("/api/leads")
+async def leads_proxy(request: Request):
+    """Proxies lead creation and listing to Data Service."""
+    return await proxy_request(DATA_SERVICE_URL, request.url.path.replace("/api", ""), request)
 
 
 # 2. Batch generate synthetic transactions

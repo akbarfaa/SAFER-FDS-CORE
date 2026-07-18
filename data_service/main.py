@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from shared.config import CORS_ORIGINS, DATA_PORT
 from data_service.database import init_db
-from data_service.routers import transactions, analytics
+from data_service.routers import transactions, analytics, leads
 
 app = FastAPI(
     title="SAFER Data Service",
@@ -33,6 +33,7 @@ app.add_middleware(
 # Mount routers
 app.include_router(transactions.router)
 app.include_router(analytics.router)
+app.include_router(leads.router)
 
 
 @app.on_event("startup")

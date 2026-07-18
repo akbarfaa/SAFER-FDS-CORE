@@ -136,3 +136,19 @@ class Alert(Base):
     message = Column(Text, default="")
     is_resolved = Column(Boolean, default=False)
     created_at = Column(DateTime, default=_utcnow)
+
+
+class LeadRegistration(Base):
+    """Stores B2B demo requests, registrations, and generated client credentials."""
+
+    __tablename__ = "leads_registration"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(100), nullable=False)
+    company = Column(String(100), nullable=False)
+    position = Column(String(100), nullable=False)
+    interest_model = Column(String(50), nullable=False)
+    client_id = Column(String(100), unique=True, index=True)
+    client_secret = Column(String(100))
+    created_at = Column(DateTime, default=_utcnow)
