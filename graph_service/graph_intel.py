@@ -57,19 +57,35 @@ def generate_hierarchical_coordinates(G, nodes_info, width=820, height=440):
         # Sort nodes by label or ID to keep layout consistent
         nodes.sort()
         
-        # Calculate horizontal spacing
-        if n_nodes == 1:
-            coords[nodes[0]] = {
-                "x": round(width / 2.0),
-                "y": tier_y[tier]
-            }
-        else:
-            spacing = (width - 2 * margin_x) / (n_nodes - 1)
-            for idx, node_id in enumerate(nodes):
-                coords[node_id] = {
-                    "x": round(margin_x + idx * spacing),
-                    "y": tier_y[tier]
+        # Split nodes into multiple rows if they exceed the limit to prevent overlap
+        max_nodes_per_row = 6
+        n_rows = math.ceil(n_nodes / max_nodes_per_row)
+        
+        for row_idx in range(n_rows):
+            row_nodes = nodes[row_idx * max_nodes_per_row : (row_idx + 1) * max_nodes_per_row]
+            n_row_nodes = len(row_nodes)
+            
+            # Calculate Y coordinate with staggered offsets for multiple rows
+            if n_rows == 1:
+                row_y = tier_y[tier]
+            else:
+                # Spread rows vertically around base tier_y
+                offset = (row_idx - (n_rows - 1) / 2.0) * 35
+                row_y = round(tier_y[tier] + offset)
+                
+            # Distribute nodes horizontally within the row
+            if n_row_nodes == 1:
+                coords[row_nodes[0]] = {
+                    "x": round(width / 2.0),
+                    "y": row_y
                 }
+            else:
+                spacing = (width - 2 * margin_x) / (n_row_nodes - 1)
+                for idx, node_id in enumerate(row_nodes):
+                    coords[node_id] = {
+                        "x": round(margin_x + idx * spacing),
+                        "y": row_y
+                    }
                 
     return coords
 
