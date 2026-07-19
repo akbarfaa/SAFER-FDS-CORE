@@ -58,19 +58,19 @@ def generate_hierarchical_coordinates(G, nodes_info, width=820, height=440):
         nodes.sort()
         
         # Split nodes into multiple rows if they exceed the limit to prevent overlap
-        max_nodes_per_row = 6
+        max_nodes_per_row = 7
         n_rows = math.ceil(n_nodes / max_nodes_per_row)
         
         for row_idx in range(n_rows):
             row_nodes = nodes[row_idx * max_nodes_per_row : (row_idx + 1) * max_nodes_per_row]
             n_row_nodes = len(row_nodes)
             
-            # Calculate Y coordinate with staggered offsets for multiple rows
+            # Calculate Y coordinate with staggered vertical gaps (larger 42px vertical gap)
             if n_rows == 1:
                 row_y = tier_y[tier]
             else:
                 # Spread rows vertically around base tier_y
-                offset = (row_idx - (n_rows - 1) / 2.0) * 35
+                offset = (row_idx - (n_rows - 1) / 2.0) * 42
                 row_y = round(tier_y[tier] + offset)
                 
             # Distribute nodes horizontally within the row
@@ -80,10 +80,14 @@ def generate_hierarchical_coordinates(G, nodes_info, width=820, height=440):
                     "y": row_y
                 }
             else:
-                spacing = (width - 2 * margin_x) / (n_row_nodes - 1)
+                # Spacing uses n_row_nodes instead of n_row_nodes - 1 to leave room for staggering
+                spacing = (width - 2 * margin_x) / n_row_nodes
+                # Stagger the starting X coordinate by half a spacing for alternating rows
+                x_start = margin_x + (spacing / 2.0 if row_idx % 2 == 1 else 0)
+                
                 for idx, node_id in enumerate(row_nodes):
                     coords[node_id] = {
-                        "x": round(margin_x + idx * spacing),
+                        "x": round(x_start + idx * spacing),
                         "y": row_y
                     }
                 
