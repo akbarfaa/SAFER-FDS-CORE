@@ -627,98 +627,112 @@ def generate_slot_cashout_ring_scenarios(count=50):
 
 def main():
     print("=" * 60)
-    print("  SAFER FDS — Enhanced Dataset Generator v2")
-    print("  100K transactions | 8 fraud patterns")
+    print("  SAFER FDS — Enhanced Dataset Generator v3")
+    print("  550K transactions | 8 fraud patterns")
     print("=" * 60)
     
-    os.makedirs("d:/SAFER/MODEL AI", exist_ok=True)
+    os.makedirs("d:/SAFER/safer-fds-core/MODEL AI", exist_ok=True)
     
-    train_size = 80000
-    test_size = 20000
+    train_size = 400000
+    test_size = 150000
     
     # Fraud Target Ratio: ~10% (more realistic)
     train_fraud_target = int(train_size * 0.10)
     test_fraud_target = int(test_size * 0.10)
     
     # ─── TRAIN DATA ─────────────────────────────────────────────
-    print(f"\n{'─'*40}")
+    print(f"\n{'-'*40}")
     print(f"Generating TRAIN dataset ({train_size:,} rows)...")
-    print(f"{'─'*40}")
+    print(f"{'-'*40}")
     train_txs = []
     
     scenarios = [
-        ("Mule Ring", generate_mule_ring_scenarios, 200),
-        ("Device Farm", generate_device_farm_scenarios, 100),
-        ("Account Takeover", generate_account_takeover_scenarios, 200),
-        ("Impossible Travel", generate_impossible_travel_scenarios, 150),
-        ("Smurfing/Structuring", generate_smurfing_scenarios, 100),
-        ("Gambling Laundering", generate_gambling_laundering_scenarios, 150),
-        ("Deepfake Social Engineering", generate_deepfake_social_engineering_scenarios, 150),
-        ("Slot Cashout Ring", generate_slot_cashout_ring_scenarios, 80),
+        ("Mule Ring", generate_mule_ring_scenarios, 650),
+        ("Device Farm", generate_device_farm_scenarios, 400),
+        ("Account Takeover", generate_account_takeover_scenarios, 2200),
+        ("Impossible Travel", generate_impossible_travel_scenarios, 2200),
+        ("Smurfing/Structuring", generate_smurfing_scenarios, 320),
+        ("Gambling Laundering", generate_gambling_laundering_scenarios, 800),
+        ("Deepfake Social Engineering", generate_deepfake_social_engineering_scenarios, 3000),
+        ("Slot Cashout Ring", generate_slot_cashout_ring_scenarios, 500),
     ]
     
     for name, gen_func, count in scenarios:
         print(f"  Injecting {name} fraud scenarios...")
         txs = gen_func(count=count)
+        # Tag each transaction with its pattern name for evaluation breakdown
+        for t in txs:
+            t["fraud_pattern"] = name
         train_txs.extend(txs)
         print(f"    -> Generated {len(txs)} transactions")
     
-    current_fraud = sum(1 for x in train_txs if x["is_fraud"] == 1)
+    current_fraud = sum(1 for x in train_txs if x.get("is_fraud", 0) == 1)
     needed_fraud = max(0, train_fraud_target - current_fraud)
     
     print(f"  Generating {needed_fraud} individual fraud transactions...")
     for _ in range(needed_fraud):
-        train_txs.append(generate_single_transaction(is_fraud=True))
+        tx = generate_single_transaction(is_fraud=True)
+        tx["fraud_pattern"] = "General Fraud"
+        train_txs.append(tx)
     
     needed_normal = train_size - len(train_txs)
     print(f"  Generating {needed_normal:,} normal transactions...")
     for _ in range(needed_normal):
-        train_txs.append(generate_single_transaction(is_fraud=False))
+        tx = generate_single_transaction(is_fraud=False)
+        tx["fraud_pattern"] = "Normal"
+        train_txs.append(tx)
     
     random.shuffle(train_txs)
     
     # ─── TEST DATA ──────────────────────────────────────────────
-    print(f"\n{'─'*40}")
+    print(f"\n{'-'*40}")
     print(f"Generating TEST dataset ({test_size:,} rows)...")
-    print(f"{'─'*40}")
+    print(f"{'-'*40}")
     test_txs = []
     
     test_scenarios = [
-        ("Mule Ring", generate_mule_ring_scenarios, 40),
-        ("Device Farm", generate_device_farm_scenarios, 25),
-        ("Account Takeover", generate_account_takeover_scenarios, 40),
-        ("Impossible Travel", generate_impossible_travel_scenarios, 30),
-        ("Smurfing/Structuring", generate_smurfing_scenarios, 25),
-        ("Gambling Laundering", generate_gambling_laundering_scenarios, 30),
-        ("Deepfake Social Engineering", generate_deepfake_social_engineering_scenarios, 30),
-        ("Slot Cashout Ring", generate_slot_cashout_ring_scenarios, 15),
+        ("Mule Ring", generate_mule_ring_scenarios, 220),
+        ("Device Farm", generate_device_farm_scenarios, 130),
+        ("Account Takeover", generate_account_takeover_scenarios, 750),
+        ("Impossible Travel", generate_impossible_travel_scenarios, 750),
+        ("Smurfing/Structuring", generate_smurfing_scenarios, 110),
+        ("Gambling Laundering", generate_gambling_laundering_scenarios, 270),
+        ("Deepfake Social Engineering", generate_deepfake_social_engineering_scenarios, 1000),
+        ("Slot Cashout Ring", generate_slot_cashout_ring_scenarios, 170),
     ]
     
     for name, gen_func, count in test_scenarios:
         print(f"  Injecting {name} fraud scenarios...")
         txs = gen_func(count=count)
+        # Tag each transaction with its pattern name for evaluation breakdown
+        for t in txs:
+            t["fraud_pattern"] = name
         test_txs.extend(txs)
         print(f"    -> Generated {len(txs)} transactions")
     
-    current_fraud_test = sum(1 for x in test_txs if x["is_fraud"] == 1)
+    current_fraud_test = sum(1 for x in test_txs if x.get("is_fraud", 0) == 1)
     needed_fraud_test = max(0, test_fraud_target - current_fraud_test)
     
     print(f"  Generating {needed_fraud_test} individual fraud transactions...")
     for _ in range(needed_fraud_test):
-        test_txs.append(generate_single_transaction(is_fraud=True))
+        tx = generate_single_transaction(is_fraud=True)
+        tx["fraud_pattern"] = "General Fraud"
+        test_txs.append(tx)
     
     needed_normal_test = test_size - len(test_txs)
     print(f"  Generating {needed_normal_test:,} normal transactions...")
     for _ in range(needed_normal_test):
-        test_txs.append(generate_single_transaction(is_fraud=False))
+        tx = generate_single_transaction(is_fraud=False)
+        tx["fraud_pattern"] = "Normal"
+        test_txs.append(tx)
     
     random.shuffle(test_txs)
     
     # ─── SAVE ───────────────────────────────────────────────────
     headers = list(train_txs[0].keys())
     
-    train_path = "d:/SAFER/MODEL AI/train_transactions.csv"
-    test_path = "d:/SAFER/MODEL AI/test_transactions.csv"
+    train_path = "d:/SAFER/safer-fds-core/MODEL AI/train_transactions.csv"
+    test_path = "d:/SAFER/safer-fds-core/MODEL AI/test_transactions.csv"
     
     print(f"\nSaving to {train_path}...")
     with open(train_path, "w", newline="", encoding="utf-8") as f:

@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 import lightgbm as lgb
+from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -23,14 +24,16 @@ from shared.config import (
     get_severity,
 )
 
-# Feature list expected by the models in the exact trained order
+# Feature list expected by the models in the exact trained order (V3 update)
 MODEL_FEATURES = [
     "sender_bank", "sender_lat", "sender_lng", "receiver_bank", "receiver_lat", "receiver_lng",
     "amount", "payment_rail", "ewallet_provider", "merchant", "merchant_category", "channel",
     "device_type", "device_brand", "is_new_device", "account_age_days", "is_velocity_anomaly",
     "is_geo_mismatch", "is_off_hours", "is_high_value_for_rail", "is_suspicious_ip",
     "is_risky_merchant", "is_new_account", "has_failed_attempts", "is_device_mismatch",
-    "is_sim_swap", "is_unusual_beneficiary", "velocity_count", "geo_distance_km"
+    "is_sim_swap", "is_unusual_beneficiary", "velocity_count", "geo_distance_km",
+    # Advanced Feature Engineering (V3)
+    "hour_sin", "hour_cos", "amount_to_age_ratio", "dist_to_velocity_ratio", "amount_to_distance_ratio"
 ]
 
 CATEGORICAL_COLS = [
@@ -39,7 +42,8 @@ CATEGORICAL_COLS = [
 ]
 
 SCALED_COLS = [
-    "amount", "account_age_days", "velocity_count", "geo_distance_km"
+    "amount", "account_age_days", "velocity_count", "geo_distance_km",
+    "hour_sin", "hour_cos", "amount_to_age_ratio", "dist_to_velocity_ratio", "amount_to_distance_ratio"
 ]
 
 
@@ -99,6 +103,29 @@ class ScoringEngine:
         if "geo_distance" in data and "geo_distance_km" not in data:
             data["geo_distance_km"] = data["geo_distance"]
 
+        # Parse timestamp to calculate cyclical hour features
+        timestamp_str = data.get("timestamp")
+        hour = 12  # default fallback
+        if timestamp_str:
+            try:
+                t_str = timestamp_str.replace("T", " ")
+                hour = datetime.strptime(t_str.split(".")[0], "%Y-%m-%d %H:%M:%S").hour
+            except Exception:
+                pass
+
+        # Calculate V3 engineered features and write to data dict
+        data["hour_sin"] = np.sin(2 * np.pi * hour / 24.0)
+        data["hour_cos"] = np.cos(2 * np.pi * hour / 24.0)
+        
+        amount = float(data.get("amount", 0.0))
+        age = float(data.get("account_age_days", 0.0))
+        dist = float(data.get("geo_distance_km", 0.0))
+        velocity = float(data.get("velocity_count", 0.0))
+        
+        data["amount_to_age_ratio"] = amount / (age + 1.0)
+        data["dist_to_velocity_ratio"] = dist / (velocity + 1.0)
+        data["amount_to_distance_ratio"] = amount / (dist + 1.0)
+
         # 1. Start with values in a single row DataFrame
         row = {}
         for col in MODEL_FEATURES:
@@ -144,8 +171,6 @@ class ScoringEngine:
 
         # 3. Apply standard scaler scaling to numeric columns (inplace replacement)
         if self.scaler:
-            # The scaler in the pipeline was fit on the SCALED_COLS ['amount', 'account_age_days', 'velocity_count', 'geo_distance_km']
-            # Let's extract them, scale them, and put them back
             scaled_vals = self.scaler.transform(df[SCALED_COLS])
             df[SCALED_COLS] = scaled_vals
 
