@@ -13,14 +13,13 @@ import math
 def generate_spring_coordinates(G, width=820, height=440):
     """
     Computes spring layout positions scaled to the SVG canvas.
-    Ensures margin boundaries are respected.
+    Ensures margin boundaries are respected and resolves overlap collisions.
     """
     if len(G) == 0:
         return {}
     
-    # Run spring layout
-    # seed for reproducibility of coordinates
-    pos = nx.spring_layout(G, k=1.5 / math.sqrt(len(G) or 1), seed=42)
+    # Run spring layout with stronger repulsion factor k and more iterations
+    pos = nx.spring_layout(G, k=3.5 / math.sqrt(len(G) or 1), iterations=80, seed=42)
     
     # Scale from [-1, 1] to width x height canvas with margins
     margin_x = 80
@@ -36,6 +35,41 @@ def generate_spring_coordinates(G, width=820, height=440):
             "x": round(center_x + x * scale_x),
             "y": round(center_y + y * scale_y)
         }
+        
+    # Collision resolution loop (push nodes apart if they are too close)
+    nodes_list = list(coords.keys())
+    for _ in range(5):  # 5 passes to resolve overlaps
+        for i in range(len(nodes_list)):
+            for j in range(i + 1, len(nodes_list)):
+                n1 = nodes_list[i]
+                n2 = nodes_list[j]
+                x1, y1 = coords[n1]["x"], coords[n1]["y"]
+                x2, y2 = coords[n2]["x"], coords[n2]["y"]
+                dx = x2 - x1
+                dy = y2 - y1
+                dist = math.sqrt(dx*dx + dy*dy)
+                min_dist = 68  # Minimum pixel distance between nodes to prevent visual overlap
+                if dist < min_dist:
+                    if dist == 0:
+                        dx = random.choice([-1, 1])
+                        dy = random.choice([-1, 1])
+                        dist = math.sqrt(dx*dx + dy*dy)
+                    # Push them apart symmetrically
+                    overlap = min_dist - dist
+                    push_x = (dx / dist) * overlap * 0.5
+                    push_y = (dy / dist) * overlap * 0.5
+                    
+                    coords[n1]["x"] = round(coords[n1]["x"] - push_x)
+                    coords[n1]["y"] = round(coords[n1]["y"] - push_y)
+                    coords[n2]["x"] = round(coords[n2]["x"] + push_x)
+                    coords[n2]["y"] = round(coords[n2]["y"] + push_y)
+                    
+                    # Constrain to margins
+                    coords[n1]["x"] = max(margin_x, min(width - margin_x, coords[n1]["x"]))
+                    coords[n1]["y"] = max(margin_y, min(height - margin_y, coords[n1]["y"]))
+                    coords[n2]["x"] = max(margin_x, min(width - margin_x, coords[n2]["x"]))
+                    coords[n2]["y"] = max(margin_y, min(height - margin_y, coords[n2]["y"]))
+                    
     return coords
 
 
@@ -71,9 +105,9 @@ def analyze_transaction_network(transactions: list[dict]) -> dict:
     # 1. Build the graph
     edges_list = []
     
-    # Process only transactions that have some risk signals or all (up to 200 for clean visualization)
+    # Process only transactions that have some risk signals or all (up to 45 for clean visualization)
     # We prioritize high-risk ones so the graph displays interesting fraud patterns
-    for tx in transactions[:150]:
+    for tx in transactions[:45]:
         tx_id = tx.get("id")
         amount = tx.get("amount", 0.0)
         rail = tx.get("payment_rail", "Transfer")
