@@ -10,66 +10,67 @@ import random
 import math
 
 
-def generate_spring_coordinates(G, width=820, height=440):
+def generate_hierarchical_coordinates(G, nodes_info, width=820, height=440):
     """
-    Computes spring layout positions scaled to the SVG canvas.
-    Ensures margin boundaries are respected and resolves overlap collisions.
+    Computes hierarchical coordinates based on entity roles to prevent overlapping
+    and display a clean cash-flow layout (IP -> Device -> Sender -> Receiver -> Merchant).
     """
-    if len(G) == 0:
-        return {}
-    
-    # Run spring layout with stronger repulsion factor k and more iterations
-    pos = nx.spring_layout(G, k=3.5 / math.sqrt(len(G) or 1), iterations=80, seed=42)
-    
-    # Scale from [-1, 1] to width x height canvas with margins
-    margin_x = 80
-    margin_y = 60
-    scale_x = (width - 2 * margin_x) / 2.0
-    scale_y = (height - 2 * margin_y) / 2.0
-    center_x = width / 2.0
-    center_y = height / 2.0
-    
     coords = {}
-    for node, (x, y) in pos.items():
-        coords[node] = {
-            "x": round(center_x + x * scale_x),
-            "y": round(center_y + y * scale_y)
-        }
+    
+    # Categorize nodes into 5 tiers
+    tier_nodes = {1: [], 2: [], 3: [], 4: [], 5: []}
+    
+    for node_id in G.nodes():
+        info = nodes_info.get(node_id, {})
+        ntype = info.get("type", "account")
         
-    # Collision resolution loop (push nodes apart if they are too close)
-    nodes_list = list(coords.keys())
-    for _ in range(5):  # 5 passes to resolve overlaps
-        for i in range(len(nodes_list)):
-            for j in range(i + 1, len(nodes_list)):
-                n1 = nodes_list[i]
-                n2 = nodes_list[j]
-                x1, y1 = coords[n1]["x"], coords[n1]["y"]
-                x2, y2 = coords[n2]["x"], coords[n2]["y"]
-                dx = x2 - x1
-                dy = y2 - y1
-                dist = math.sqrt(dx*dx + dy*dy)
-                min_dist = 68  # Minimum pixel distance between nodes to prevent visual overlap
-                if dist < min_dist:
-                    if dist == 0:
-                        dx = random.choice([-1, 1])
-                        dy = random.choice([-1, 1])
-                        dist = math.sqrt(dx*dx + dy*dy)
-                    # Push them apart symmetrically
-                    overlap = min_dist - dist
-                    push_x = (dx / dist) * overlap * 0.5
-                    push_y = (dy / dist) * overlap * 0.5
-                    
-                    coords[n1]["x"] = round(coords[n1]["x"] - push_x)
-                    coords[n1]["y"] = round(coords[n1]["y"] - push_y)
-                    coords[n2]["x"] = round(coords[n2]["x"] + push_x)
-                    coords[n2]["y"] = round(coords[n2]["y"] + push_y)
-                    
-                    # Constrain to margins
-                    coords[n1]["x"] = max(margin_x, min(width - margin_x, coords[n1]["x"]))
-                    coords[n1]["y"] = max(margin_y, min(height - margin_y, coords[n1]["y"]))
-                    coords[n2]["x"] = max(margin_x, min(width - margin_x, coords[n2]["x"]))
-                    coords[n2]["y"] = max(margin_y, min(height - margin_y, coords[n2]["y"]))
-                    
+        if ntype == "ip":
+            tier_nodes[1].append(node_id)
+        elif ntype == "device":
+            tier_nodes[2].append(node_id)
+        elif ntype == "merchant":
+            tier_nodes[5].append(node_id)
+        else: # account
+            # Check in-degree to distinguish sender vs receiver
+            in_deg = G.in_degree(node_id)
+            if in_deg == 0:
+                tier_nodes[3].append(node_id)
+            else:
+                tier_nodes[4].append(node_id)
+                
+    # Define vertical positions for each tier (IP -> Device -> Sender -> Receiver -> Merchant)
+    tier_y = {
+        1: 50,    # IP
+        2: 130,   # Device
+        3: 220,   # Sender Account
+        4: 310,   # Receiver Account / Penampung
+        5: 395    # Merchant
+    }
+    
+    margin_x = 90
+    
+    for tier, nodes in tier_nodes.items():
+        n_nodes = len(nodes)
+        if n_nodes == 0:
+            continue
+        
+        # Sort nodes by label or ID to keep layout consistent
+        nodes.sort()
+        
+        # Calculate horizontal spacing
+        if n_nodes == 1:
+            coords[nodes[0]] = {
+                "x": round(width / 2.0),
+                "y": tier_y[tier]
+            }
+        else:
+            spacing = (width - 2 * margin_x) / (n_nodes - 1)
+            for idx, node_id in enumerate(nodes):
+                coords[node_id] = {
+                    "x": round(margin_x + idx * spacing),
+                    "y": tier_y[tier]
+                }
+                
     return coords
 
 
@@ -281,8 +282,8 @@ def analyze_transaction_network(transactions: list[dict]) -> dict:
         )
         insights.append("Pola transaksional antar entitas saat ini dinilai stabil tanpa indikasi anomali struktural terpusat.")
     
-    # 4. Generate Coordinates via Spring Layout
-    positions = generate_spring_coordinates(G)
+    # 4. Generate Coordinates via Hierarchical Flow Layout
+    positions = generate_hierarchical_coordinates(G, nodes_info)
     
     # Build final nodes array with coordinates
     nodes_result = []
